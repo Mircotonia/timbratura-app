@@ -43,16 +43,35 @@ async function api(path,opt={}){let r=await fetch(API+path,{...opt,headers:{"Con
 async function login(){try{session=await api("/login",{method:"POST",body:JSON.stringify({username:$("u").value.trim(),pin:$("p").value})});$("login").classList.add("hidden");if(session.role==="admin"){ $("adm").classList.remove("hidden");await adminLoad()}else{$("emp").classList.remove("hidden");$("name").textContent="Ciao, "+session.name;await empLoad();startLiveCounter()}}catch(e){$("err").textContent=e.message}}
 function sec(r){if(!r||!r.start_at)return 0;let end=r.finish_at?new Date(r.finish_at):new Date();let pause=(r.pause_seconds||0)+(r.pause_started_at?(end-new Date(r.pause_started_at))/1000:0);return Math.max(0,(end-new Date(r.start_at))/1000-pause)}
 function fmt(s){let m=Math.floor(Math.max(0,s)/60);return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
- async function punch(action){
-  console.log("PUNCH:",action);
+async function punch(action){
+  console.log("PUNCH:", action);
+
   try{
-    const result=await api("/punch",{
+    const result = await api("/punch",{
       method:"POST",
       body:JSON.stringify({action})
     });
-    console.log("PUNCH OK:",result);
+
+    console.log("PUNCH OK:", result);
+
+    if(action === "start"){
+      $("#hours").textContent = "00:00";
+      $("#hours").style.color = "green";
+      startLiveCounter();
+    }
+
+    if(action === "pause"){
+      await empLoad();
+    }
+
+    if(action === "finish"){
+      await empLoad();
+      if(liveTimer) clearInterval(liveTimer);
+      liveTimer = null;
+    }
+
     await empLoad();
-    startLiveCounter();
+
   }catch(e){
     console.error("PUNCH ERROR:",e);
     alert("Errore timbratura: "+e.message);
