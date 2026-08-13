@@ -83,18 +83,17 @@ async function adminLoad(){employees=await api("/employees");let es=employees.fi
 async function adminDetail(){let id=$("sel").value;if(!id)return;let rs=await api("/records?employee_id="+id),month=$("adate").value.slice(0,7),mr=rs.filter(r=>r.work_day.startsWith(month));let total=mr.reduce((a,r)=>a+sec(r),0);$("detail").innerHTML=`<div class=row><b>Totale mese</b><b>${fmt(total)}</b></div>`+mr.sort((a,b)=>b.work_day.localeCompare(a.work_day)).map(r=>`<div class=row><span>${r.work_day}</span><b>${fmt(sec(r))}</b></div>`).join("")}
 let liveTimer=null;
 
-function startLiveCounter(){
+function startLiveCounter(startAt){
   if(liveTimer) clearInterval(liveTimer);
 
-  liveTimer=setInterval(()=>{
-    const r=records.find(x=>x.work_day===today() && x.start_at);
+  const start = new Date(startAt);
 
-    if(!r) return;
-
-    const start=new Date(r.start_at);
-    const seconds=Math.floor((Date.now()-start.getTime())/1000);
-
-    $("#hours").textContent=f​​mt(seconds);
+  liveTimer = setInterval(()=>{
+    const seconds = Math.floor((Date.now() - start.getTime()) / 1000);
+    $("#hours").textContent = fmt(seconds);
   },1000);
+
+  const seconds = Math.floor((Date.now() - start.getTime()) / 1000);
+  $("#hours").textContent = fmt(seconds);
 }
 </script></body></html>
