@@ -64,5 +64,12 @@ async function adminLoad(){employees=await api("/employees");let es=employees.fi
 async function adminDetail(){let id=$("sel").value;if(!id)return;let rs=await api("/records?employee_id="+id),month=$("adate").value.slice(0,7),mr=rs.filter(r=>r.work_day.startsWith(month));let total=mr.reduce((a,r)=>a+sec(r),0);$("detail").innerHTML=`<div class=row><b>Totale mese</b><b>${fmt(total)}</b></div>`+mr.sort((a,b)=>b.work_day.localeCompare(a.work_day)).map(r=>`<div class=row><span>${r.work_day}</span><b>${fmt(sec(r))}</b></div>`).join("")}
 let liveTimer=null;
 function startLiveCounter(){if(liveTimer)clearInterval(liveTimer);liveTimer=setInterval(async()=>{if(session&&session.role==="employee"){try{await empLoad()}catch(e){}}},15000)}
-function logout(){if(liveTimer)clearInterval(liveTimer);location.reload()}
+ function startLiveCounter(){
+  if(liveTimer) clearInterval(liveTimer);
+  liveTimer=setInterval(async()=>{
+    await empLoad();
+    const r=records.find(x=>x.work_day===today()&&x.start_at&&!x.finish_at);
+    if(r) $("#hours").textContent=fmt(sec(r));
+  },1000);
+}
 </script></body></html>
