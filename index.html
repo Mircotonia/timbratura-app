@@ -86,22 +86,15 @@ let liveTimer=null;
 function startLiveCounter(){
   if(liveTimer) clearInterval(liveTimer);
 
-  liveTimer=setInterval(async()=>{
-    try{
-      await empLoad();
+  liveTimer=setInterval(()=>{
+    const r=records.find(x=>x.work_day===today() && x.start_at);
 
-      const r=records.find(x=>
-        x.work_day===today() &&
-        x.start_at &&
-        !x.finish_at
-      );
+    if(!r) return;
 
-      if(r){
-        $("hours").textContent=fmt(sec(r));
-      }
-    }catch(e){
-      console.error("COUNTER ERROR:",e);
-    }
+    const start=new Date(r.start_at);
+    const seconds=Math.floor((Date.now()-start.getTime())/1000);
+
+    $("#hours").textContent=f​​mt(seconds);
   },1000);
 }
 </script></body></html>
