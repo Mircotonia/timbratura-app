@@ -538,15 +538,17 @@ function startLiveCounter(startAt){
   const start=new Date(startAt);
 
   function update(){
-
     const seconds=Math.floor(
       (Date.now()-start.getTime())/1000
     );
 
     $("hours").textContent=fmt(seconds);
-
   }
 
+  update();
+
+  liveTimer=setInterval(update,1000);
+}
   update();
 
   liveTimer=setInterval(
