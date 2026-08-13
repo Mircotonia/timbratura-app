@@ -55,13 +55,21 @@ async function punch(action){
     console.log("PUNCH OK:", result);
 
     if(action === "start"){
-      const hours = document.getElementById("hours");
-      const st = document.getElementById("st");
+  const hours = document.getElementById("hours");
+  const st = document.getElementById("st");
 
-      if(hours){
-        hours.textContent = "00:00";
-        hours.style.color = "green";
-      }
+  if(hours){
+    hours.textContent = "00:00";
+    hours.style.color = "green";
+  }
+
+  if(st){
+    st.textContent = "IN CORSO";
+  }
+
+  startLiveCounter(result.start_at);
+  return;
+}
 
       if(st){
         st.textContent = "IN CORSO";
