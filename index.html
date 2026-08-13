@@ -36,10 +36,11 @@ input,select{border:1px solid #ddd;background:white}button{border:0;font-weight:
 </main>
 <script>
 const API="https://timbrature-7pee.onrender.com";let mode="employee",session=null,records=[],employees=[];
-const $=x=>document.getElementById(x),today=()=>new Date().toISOString().slice(0,10);
+const $=x=>document.getElementById(x);
+function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 $("edate").value=today();$("adate").value=today();
 async function api(path,opt={}){let r=await fetch(API+path,{...opt,headers:{"Content-Type":"application/json",...(session?{"Authorization":"Bearer "+session.token}:{}),...(opt.headers||{})}});let d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Errore server");return d}
-async function login(){try{session=await api("/login",{method:"POST",body:JSON.stringify({username:$("u").value.trim(),pin:$("p").value})});$("login").classList.add("hidden");if(session.role==="admin"){ $("adm").classList.remove("hidden");await adminLoad()}else{$("emp").classList.remove("hidden");$("name").textContent="Ciao, "+session.name;await empLoad()}}catch(e){$("err").textContent=e.message}}
+async function login(){try{session=await api("/login",{method:"POST",body:JSON.stringify({username:$("u").value.trim(),pin:$("p").value})});$("login").classList.add("hidden");if(session.role==="admin"){ $("adm").classList.remove("hidden");await adminLoad()}else{$("emp").classList.remove("hidden");$("name").textContent="Ciao, "+session.name;await empLoad();startLiveCounter()}}catch(e){$("err").textContent=e.message}}
 function sec(r){if(!r||!r.start_at)return 0;let end=r.finish_at?new Date(r.finish_at):new Date();let pause=(r.pause_seconds||0)+(r.pause_started_at?(end-new Date(r.pause_started_at))/1000:0);return Math.max(0,(end-new Date(r.start_at))/1000-pause)}
 function fmt(s){let m=Math.floor(Math.max(0,s)/60);return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
 async function punch(action){try{await api("/punch",{method:"POST",body:JSON.stringify({action})});await empLoad()}catch(e){alert(e.message)}}
@@ -47,5 +48,7 @@ async function empLoad(){records=await api("/records");let r=records.find(x=>x.w
 function empDay(){let r=records.find(x=>x.work_day===$("edate").value);$("edetail").innerHTML=r?`<div class=row><b>Ore</b><b>${fmt(sec(r))}</b></div><div class=row><span>Inizio</span><span>${r.start_at?new Date(r.start_at).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"-"}</span></div><div class=row><span>Fine</span><span>${r.finish_at?new Date(r.finish_at).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"-"}</span></div>`:"<p class=small>Nessuna timbratura.</p>"}
 async function adminLoad(){employees=await api("/employees");let es=employees.filter(e=>e.role==="employee");$("sel").innerHTML=es.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");let out="";for(let e of es){let rs=await api("/records?employee_id="+e.id),r=rs.find(x=>x.work_day===$("adate").value);out+=`<div class=row><b>${e.name}</b><b>${fmt(sec(r))}</b></div>`}$("summary").innerHTML=out;adminDetail()}
 async function adminDetail(){let id=$("sel").value;if(!id)return;let rs=await api("/records?employee_id="+id),month=$("adate").value.slice(0,7),mr=rs.filter(r=>r.work_day.startsWith(month));let total=mr.reduce((a,r)=>a+sec(r),0);$("detail").innerHTML=`<div class=row><b>Totale mese</b><b>${fmt(total)}</b></div>`+mr.sort((a,b)=>b.work_day.localeCompare(a.work_day)).map(r=>`<div class=row><span>${r.work_day}</span><b>${fmt(sec(r))}</b></div>`).join("")}
-function logout(){location.reload()}
+let liveTimer=null;
+function startLiveCounter(){if(liveTimer)clearInterval(liveTimer);liveTimer=setInterval(async()=>{if(session&&session.role==="employee"){try{await empLoad()}catch(e){}}},15000)}
+function logout(){if(liveTimer)clearInterval(liveTimer);location.reload()}
 </script></body></html>
