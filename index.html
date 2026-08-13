@@ -47,17 +47,48 @@ async function punch(action){
   console.log("PUNCH:", action);
 
   try{
-    const result = await api("/punch",{
+    const result = await api("/punch", {
       method:"POST",
       body:JSON.stringify({action})
     });
 
     console.log("PUNCH OK:", result);
 
-if(action === "start"){
-  $("hours").textContent = "00:00";
-  document.getElementById("hours").style.color = "green";
-  startLiveCounter(result.start_at);
+    if(action === "start"){
+      const hours = document.getElementById("hours");
+      const st = document.getElementById("st");
+
+      if(hours){
+        hours.textContent = "00:00";
+        hours.style.color = "green";
+      }
+
+      if(st){
+        st.textContent = "IN CORSO";
+      }
+
+      startLiveCounter(result.start_at);
+      return;
+    }
+
+    if(action === "pause"){
+      await empLoad();
+      return;
+    }
+
+    if(action === "finish"){
+      if(liveTimer){
+        clearInterval(liveTimer);
+        liveTimer = null;
+      }
+      await empLoad();
+      return;
+    }
+
+  }catch(e){
+    console.error("PUNCH ERROR:", e);
+    alert("Errore timbratura: " + e.message);
+  }
 }
 
 if(action === "pause"){
@@ -96,7 +127,10 @@ async function adminDetail(){let id=$("sel").value;if(!id)return;let rs=await ap
 let liveTimer=null;
 
 function startLiveCounter(startAt){
-  if(liveTimer) clearInterval(liveTimer);
+
+  if(liveTimer){
+    clearInterval(liveTimer);
+  }
 
   const hours = document.getElementById("hours");
 
@@ -104,6 +138,26 @@ function startLiveCounter(startAt){
     console.error("ERRORE: elemento #hours non trovato");
     return;
   }
+
+  const start = new Date(startAt);
+
+  if(isNaN(start.getTime())){
+    console.error("ERRORE start_at non valido:", startAt);
+    return;
+  }
+
+  function aggiorna(){
+    const seconds = Math.max(
+      0,
+      Math.floor((Date.now() - start.getTime()) / 1000)
+    );
+
+    hours.textContent = fmt(seconds);
+  }
+
+  aggiorna();
+  liveTimer = setInterval(aggiorna, 1000);
+}
 
   const start = new Date(startAt);
 
