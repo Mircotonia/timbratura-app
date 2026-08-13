@@ -56,7 +56,11 @@ async function punch(action){
 
     if(action === "start"){
 $("hours").textContent = "00:00";
-      $("hours").style.color = "green";
+     if(action === "start"){
+  $("hours").textContent = "00:00";
+  document.getElementById("hours").style.color = "green";
+  startLiveCounter(result.start_at);
+}
      startLiveCounter(result.start_at);
     }
 
