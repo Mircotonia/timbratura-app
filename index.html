@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="it"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a84ff"><link rel="manifest" href="manifest.webmanifest">
+<title>Timbratura</title>
+<style>
+body{margin:0;background:#f2f2f7;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+.app{max-width:520px;margin:auto;min-height:100vh;background:#fff;padding:20px}
+h1{text-align:center}.card{background:#f7f7f8;border-radius:18px;padding:18px;margin:14px 0}
+input,select,button{width:100%;box-sizing:border-box;padding:14px;margin:6px 0;border-radius:12px;font-size:17px}
+input,select{border:1px solid #ddd;background:white}button{border:0;font-weight:700}
+.blue{background:#0a84ff;color:white}.green{background:#34c759;color:white}.red{background:#ff3b30;color:white}
+.gray{background:#e5e5ea}.tabs{display:flex;gap:8px}.tabs button{background:#e5e5ea}.tabs .on{background:#0a84ff;color:white}
+.hidden{display:none}.hours{text-align:center;font-size:48px;font-weight:800;font-family:monospace}
+.status{text-align:center;font-weight:700;margin:8px}.ok{color:#34c759}.pause{color:#0a84ff}.done{color:#ff3b30}
+.row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #ddd}.small{font-size:13px;color:#777}.error{color:#f00}
+</style></head><body><main class="app">
+<h1>⏱️ TIMBRATURA</h1>
+
+<section id="login"><div class="tabs">
+<button id="btE" class="on" onclick="mode='employee';btE.className='on';btA.className=''">Dipendente</button>
+<button id="btA" onclick="mode='admin';btA.className='on';btE.className=''">Admin</button></div>
+<div class="card"><input id="u" placeholder="Nome / Username"><input id="p" type="password" placeholder="PIN">
+<button class="blue" onclick="login()">ACCEDI</button><div id="err" class="error"></div></div></section>
+
+<section id="emp" class="hidden"><div class="card"><h2 id="name"></h2><div id="hours" class="hours">00:00</div><div id="st" class="status"></div>
+<button class="green" onclick="punch('start')">INIZIO</button>
+<button class="blue" onclick="punch('pause')">PAUSA / RIPRENDI</button>
+<button class="red" onclick="punch('finish')">FINE</button></div>
+<div class="card"><h2>Le mie ore</h2><input id="edate" type="date" onchange="empDay()"><div id="edetail"></div></div>
+<button class="gray" onclick="logout()">ESCI</button></section>
+
+<section id="adm" class="hidden"><div class="card"><h2>👑 Admin</h2><input id="adate" type="date" onchange="adminLoad()"><div id="summary"></div></div>
+<div class="card"><h2>Dettaglio dipendente</h2><select id="sel" onchange="adminDetail()"></select><div id="detail"></div></div>
+<button class="gray" onclick="logout()">ESCI</button></section>
+</main>
+<script>
+const API="https://timbrature-7pee.onrender.com";let mode="employee",session=null,records=[],employees=[];
+const $=x=>document.getElementById(x),today=()=>new Date().toISOString().slice(0,10);
+$("edate").value=today();$("adate").value=today();
+async function api(path,opt={}){let r=await fetch(API+path,{...opt,headers:{"Content-Type":"application/json",...(session?{"Authorization":"Bearer "+session.token}:{}),...(opt.headers||{})}});let d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"Errore server");return d}
+async function login(){try{session=await api("/login",{method:"POST",body:JSON.stringify({username:$("u").value.trim(),pin:$("p").value})});$("login").classList.add("hidden");if(session.role==="admin"){ $("adm").classList.remove("hidden");await adminLoad()}else{$("emp").classList.remove("hidden");$("name").textContent="Ciao, "+session.name;await empLoad()}}catch(e){$("err").textContent=e.message}}
+function sec(r){if(!r||!r.start_at)return 0;let end=r.finish_at?new Date(r.finish_at):new Date();let pause=(r.pause_seconds||0)+(r.pause_started_at?(end-new Date(r.pause_started_at))/1000:0);return Math.max(0,(end-new Date(r.start_at))/1000-pause)}
+function fmt(s){let m=Math.floor(Math.max(0,s)/60);return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
+async function punch(action){try{await api("/punch",{method:"POST",body:JSON.stringify({action})});await empLoad()}catch(e){alert(e.message)}}
+async function empLoad(){records=await api("/records");let r=records.find(x=>x.work_day===today());$("hours").textContent=fmt(sec(r));$("st").textContent=r?.finish_at?"GIORNATA TERMINATA":r?.pause_started_at?"IN PAUSA":r?.start_at?"AL LAVORO":"NON INIZIATA";$("st").className="status "+(r?.finish_at?"done":r?.pause_started_at?"pause":r?.start_at?"ok":"");empDay()}
+function empDay(){let r=records.find(x=>x.work_day===$("edate").value);$("edetail").innerHTML=r?`<div class=row><b>Ore</b><b>${fmt(sec(r))}</b></div><div class=row><span>Inizio</span><span>${r.start_at?new Date(r.start_at).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"-"}</span></div><div class=row><span>Fine</span><span>${r.finish_at?new Date(r.finish_at).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"-"}</span></div>`:"<p class=small>Nessuna timbratura.</p>"}
+async function adminLoad(){employees=await api("/employees");let es=employees.filter(e=>e.role==="employee");$("sel").innerHTML=es.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");let out="";for(let e of es){let rs=await api("/records?employee_id="+e.id),r=rs.find(x=>x.work_day===$("adate").value);out+=`<div class=row><b>${e.name}</b><b>${fmt(sec(r))}</b></div>`}$("summary").innerHTML=out;adminDetail()}
+async function adminDetail(){let id=$("sel").value;if(!id)return;let rs=await api("/records?employee_id="+id),month=$("adate").value.slice(0,7),mr=rs.filter(r=>r.work_day.startsWith(month));let total=mr.reduce((a,r)=>a+sec(r),0);$("detail").innerHTML=`<div class=row><b>Totale mese</b><b>${fmt(total)}</b></div>`+mr.sort((a,b)=>b.work_day.localeCompare(a.work_day)).map(r=>`<div class=row><span>${r.work_day}</span><b>${fmt(sec(r))}</b></div>`).join("")}
+function logout(){location.reload()}
+</script></body></html>
