@@ -54,19 +54,23 @@ async function punch(action){
 
     console.log("PUNCH OK:", result);
 
-    if(action === "start"){
 if(action === "start"){
   $("hours").textContent = "00:00";
   document.getElementById("hours").style.color = "green";
   startLiveCounter(result.start_at);
 }
-      document.getElementById("hours").style.color = "green";
-  $("hours").textContent = "00:00";
-  document.getElementById("hours").style.color = "green";
-  startLiveCounter(result.start_at);
+
+if(action === "pause"){
+  await empLoad();
 }
-     startLiveCounter(result.start_at);
-    }
+
+if(action === "finish"){
+  await empLoad();
+  if(liveTimer) clearInterval(liveTimer);
+  liveTimer = null;
+}
+
+await empLoad();
 
     if(action === "pause"){
       await empLoad();
