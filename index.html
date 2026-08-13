@@ -446,11 +446,15 @@ async function punch(action){
 
     if(action==="pause"){
 
-      $("st").textContent="PAUSA";
+  if(liveTimer){
+    clearInterval(liveTimer);
+    liveTimer=null;
+  }
 
-      await empLoad();
+  $("st").textContent="PAUSA";
 
-    }
+  await empLoad();
+}
 
     if(action==="finish"){
 
