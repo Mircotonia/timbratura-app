@@ -24,7 +24,7 @@ input,select{border:1px solid #ddd;background:white}button{border:0;font-weight:
 <button class="blue" onclick="login()">ACCEDI</button><div id="err" class="error"></div></div></section>
 
 <section id="emp" class="hidden"><div class="card"><h2 id="name"></h2><div id="hours" class="hours">00:00</div><div id="st" class="status"></div>
-<button class="green" onclick="punch('start')">INIZIO</button>
+<button class="green" onclick="console.log('CLICK INIZIO'); punch('start')">INIZIO</button> 
 <button class="blue" onclick="punch('pause')">PAUSA / RIPRENDI</button>
 <button class="red" onclick="punch('finish')">FINE</button></div>
 <div class="card"><h2>Le mie ore</h2><input id="edate" type="date" onchange="empDay()"><div id="edetail"></div></div>
