@@ -57,7 +57,7 @@ async function punch(action){
     if(action === "start"){
       $("#hours").textContent = "00:00";
       $("#hours").style.color = "green";
-      startLiveCounter();
+     startLiveCounter(result.start_at);
     }
 
     if(action === "pause"){
