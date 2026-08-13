@@ -86,14 +86,21 @@ let liveTimer=null;
 function startLiveCounter(startAt){
   if(liveTimer) clearInterval(liveTimer);
 
+  const hours = document.getElementById("hours");
+
+  if(!hours){
+    console.error("ERRORE: elemento #hours non trovato");
+    return;
+  }
+
   const start = new Date(startAt);
 
-  liveTimer = setInterval(()=>{
+  function aggiorna(){
     const seconds = Math.floor((Date.now() - start.getTime()) / 1000);
-    $("#hours").textContent = fmt(seconds);
-  },1000);
+    hours.textContent = fmt(seconds);
+  }
 
-  const seconds = Math.floor((Date.now() - start.getTime()) / 1000);
-  $("#hours").textContent = fmt(seconds);
+  aggiorna();
+  liveTimer = setInterval(aggiorna, 1000);
 }
 </script></body></html>
