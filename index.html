@@ -502,10 +502,18 @@ async function empLoad(){
 /* ORE DEL GIORNO */
 
 function empDay(){
+  const date=$("edate").value;
 
   const r=records.find(
-  x=>String(x.work_day).slice(0,10)===date
-);
+    x=>String(x.work_day).slice(0,10)===date
+  );
+
+  if(!r){
+    $("edetail").innerHTML=
+      "<p>Nessuna timbratura.</p>";
+    return;
+  }
+
   $("edetail").innerHTML=
     "<p><b>Inizio:</b> "+
     (r.start_at||"-")+
@@ -516,7 +524,6 @@ function empDay(){
     "<p><b>Totale:</b> "+
     fmt(secondsForRecord(r))+
     "</p>";
-
 }
 
 
