@@ -455,12 +455,28 @@ function startLiveCounterRecord(r){
   update();
   liveTimer=setInterval(update,1000);
 }
-    if(action==="pause"){
+   if(action==="pause"){
+
   if(result.pause_started_at){
+
     if(liveTimer){
       clearInterval(liveTimer);
       liveTimer=null;
     }
+
+    $("st").textContent="PAUSA";
+    await empLoad();
+
+  }else{
+
+    $("st").textContent="IN CORSO";
+    $("hours").style.color="green";
+
+    startLiveCounterRecord(result);
+
+    await empLoad();
+  }
+}
 
     $("st").textContent="PAUSA";
     await empLoad();
