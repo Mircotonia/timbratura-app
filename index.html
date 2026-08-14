@@ -579,7 +579,7 @@ async function adminLoad(){
     );
 
     const day=all.filter(
-      r=>r.work_day===date
+     r=>String(r.work_day).slice(0,10)===date
     );
 
     $("summary").innerHTML=
@@ -620,7 +620,7 @@ async function adminDetail(){
     );
 
     const r=rs.find(
-      x=>x.work_day===date
+    x=>String(x.work_day).slice(0,10)===date
     );
 
     if(!r){
